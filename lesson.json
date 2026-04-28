@@ -419,19 +419,24 @@
   },
 {
   "id": 39,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
-  "jp": "東京タワー。",
-  "kana": "とうきょうタワー。",
-  "romaji": "toukyou tawaa.",
-  "zh": "東京鐵塔。",
+  "jp": "東京タワー",
+  "kana": "とうきょうタワー",
+  "romaji": "toukyou tawaa",
+  "zh": "東京鐵塔",
   "start": 4.18,
-  "end": 5.21
+  "end": 4.70
 },
 {
   "id": 40,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
+  "jp": "見ましたか。",
+  "kana": "みましたか。",
+  "romaji": "mimashita ka.",
+  "zh": "看了嗎？",
+  "start": 4.70,
+  "end": 5.21
+},
+{
+  "id": 41,
   "jp": "もちろん見ましたよ。",
   "kana": "もちろんみましたよ。",
   "romaji": "mochiron mimashita yo.",
@@ -440,9 +445,7 @@
   "end": 6.66
 },
 {
-  "id": 41,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
+  "id": 42,
   "jp": "おみやげも買いました。",
   "kana": "おみやげもかいました。",
   "romaji": "omiyage mo kaimashita.",
@@ -451,9 +454,7 @@
   "end": 8.98
 },
 {
-  "id": 42,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
+  "id": 43,
   "jp": "それはよかったですね。",
   "kana": "それはよかったですね。",
   "romaji": "sore wa yokatta desu ne.",
@@ -462,9 +463,7 @@
   "end": 11.33
 },
 {
-  "id": 43,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
+  "id": 44,
   "jp": "はい。でも",
   "kana": "はい。でも",
   "romaji": "hai. demo",
@@ -473,9 +472,7 @@
   "end": 14.33
 },
 {
-  "id": 44,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
+  "id": 45,
   "jp": "京都に",
   "kana": "きょうとに",
   "romaji": "kyouto ni",
@@ -484,9 +481,7 @@
   "end": 15.63
 },
 {
-  "id": 45,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
+  "id": 46,
   "jp": "行きませんでした。",
   "kana": "いきませんでした。",
   "romaji": "ikimasen deshita.",
@@ -495,9 +490,7 @@
   "end": 18.91
 },
 {
-  "id": 46,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
+  "id": 47,
   "jp": "次は",
   "kana": "つぎは",
   "romaji": "tsugi wa",
@@ -506,9 +499,7 @@
   "end": 20.67
 },
 {
-  "id": 47,
-  "audio": "4_kaaru_san.m4a",
-  "speaker": "カールさん",
+  "id": 48,
   "jp": "京都に行きたいです。",
   "kana": "きょうとにいきたいです。",
   "romaji": "kyouto ni ikitai desu.",
