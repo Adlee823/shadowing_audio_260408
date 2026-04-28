@@ -84,25 +84,39 @@ button.green { background:var(--green); }
 <script>
 let DATA = [];
 
-const player = document.getElementById('player');
-
 async function loadLesson(){
   try {
-    const res = await fetch("lesson.json?v=" + Date.now());
-    if (!res.ok) throw new Error("lesson.json 載入失敗");
-    DATA = await res.json();
+    setStatus('lesson.json 載入中…');
+    const res = await fetch('lesson.json?v=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('lesson.json 載入失敗：HTTP ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('lesson.json 格式錯誤：最外層必須是陣列 []');
 
-    // 保險修正第11句中文
-    const item11 = DATA.find(x => x.id === 11);
-    if (item11) item11.zh = "我想想看…";
+    DATA = data.map((x, i) => ({
+      ...x,
+      id: x.id ?? (i + 1),
+      jp: x.jp ?? x.text ?? '',
+      kana: x.kana ?? '',
+      romaji: x.romaji ?? '',
+      zh: x.zh ?? '',
+      file: x.file ?? (x.audio ? 'audio/' + x.audio : `audio/${String(i + 1).padStart(3, '0')}.mp3`)
+    }));
 
-    loadLesson();
+    // 第11句中文語感修正
+    const item11 = DATA.find(x => Number(x.id) === 11);
+    if (item11) item11.zh = '嗯, 是呢…';
+
+    current = Math.max(0, Math.min(current, DATA.length - 1));
+    renderCurrent(false);
     setStatus(`lesson.json 已載入，共 ${DATA.length} 句`);
-  } catch (e) {
+  } catch(e) {
     console.error(e);
-    setStatus("lesson.json 載入失敗，請確認檔案是否在 index.html 同一層");
+    DATA = [];
+    renderCurrent(false);
+    setStatus((e && e.message) ? e.message : 'lesson.json 載入失敗，請確認 lesson.json 與 index.html 在同一層');
   }
 }
+
 const player = document.getElementById('player');
 const jpEl = document.getElementById('jp');
 const kanaEl = document.getElementById('kana');
@@ -127,6 +141,17 @@ function setStatus(msg) { statusEl.textContent = '狀態：' + msg; }
 function clearTimer() { if (timer) { clearTimeout(timer); timer = null; } }
 function wait(ms) { return new Promise(resolve => { clearTimer(); timer = setTimeout(() => { timer = null; resolve(); }, ms); }); }
 function renderCurrent(active=false) {
+  if (!DATA || DATA.length === 0) {
+    idxEl.textContent = '第 0 句 / 共 0 句';
+    jpEl.textContent = '資料載入中…';
+    kanaEl.textContent = '';
+    romajiEl.textContent = '';
+    zhEl.textContent = '';
+    bigcardEl.classList.remove('glow');
+    listEl.innerHTML = '';
+    return;
+  }
+  current = Math.max(0, Math.min(current, DATA.length - 1));
   const x = DATA[current];
   idxEl.textContent = `第 ${current+1} 句 / 共 ${DATA.length} 句`;
   jpEl.textContent = x.jp;
@@ -137,6 +162,7 @@ function renderCurrent(active=false) {
   renderList(active);
 }
 function renderList(active=false) {
+  if (!DATA || DATA.length === 0) { listEl.innerHTML = ''; return; }
   listEl.innerHTML = DATA.map((x,i)=>`
     <div class="row ${i===current?'active':''} ${i===current && active ? 'playing' : ''}" data-i="${i}">
       <div class="no">${String(i+1).padStart(2,'0')}</div>
@@ -166,6 +192,7 @@ async function playClip(seg) {
   });
 }
 async function runCurrentSegment(onlyOne=false) {
+  if (!DATA || DATA.length === 0) { setStatus('lesson.json 尚未載入完成'); return; }
   const seg = DATA[current];
   const repeatCount = onlyOne ? 1 : Math.max(1, parseInt(repeatEl.value,10) || 1);
   const delay = Math.max(0, parseInt(delayEl.value,10) || 0);
@@ -193,6 +220,7 @@ async function runCurrentSegment(onlyOne=false) {
   setStatus(`第 ${current+1} 句完成`);
 }
 async function startSequence() {
+  if (!DATA || DATA.length === 0) { alert('lesson.json 尚未載入完成'); return; }
   if (!unlocked) { alert('請先按「解鎖音訊」'); return; }
   if (running) return;
   running = true; paused = false; stopRequested = false;
@@ -224,6 +252,8 @@ async function onRowClick(i) {
 }
 document.getElementById('unlockBtn').addEventListener('click', async () => {
   try {
+    if (!DATA || DATA.length === 0) { await loadLesson(); }
+    if (!DATA || DATA.length === 0) throw new Error('lesson.json 尚未載入完成');
     player.src = DATA[0].file;
     player.muted = true;
     await player.play();
@@ -240,7 +270,7 @@ document.getElementById('stopBtn').addEventListener('click', stopAll);
 document.getElementById('prevBtn').addEventListener('click', () => jumpTo(current-1));
 document.getElementById('nextBtn').addEventListener('click', () => jumpTo(current+1));
 document.getElementById('playOneBtn').addEventListener('click', async () => { if (!unlocked) { alert('請先按「解鎖音訊」'); return; } stopAll(); stopRequested=false; await runCurrentSegment(true); });
-renderCurrent(false);
+loadLesson();
 </script>
 </body>
 </html>
