@@ -92,19 +92,31 @@ async function loadLesson(){
     const data = await res.json();
     if (!Array.isArray(data)) throw new Error('lesson.json 格式錯誤：最外層必須是陣列 []');
 
-    DATA = data.map((x, i) => ({
-      ...x,
-      id: x.id ?? (i + 1),
-      jp: x.jp ?? x.text ?? '',
-      kana: x.kana ?? '',
-      romaji: x.romaji ?? '',
-      zh: x.zh ?? '',
-      file: x.file ?? (x.audio ? 'audio/' + x.audio : `audio/${String(i + 1).padStart(3, '0')}.mp3`)
-    }));
+    let lastAudio = '';
+    let lastSpeaker = '';
+    DATA = data.map((x, i) => {
+      if (x.audio) lastAudio = x.audio;
+      if (x.speaker) lastSpeaker = x.speaker;
+      const audioName = x.audio || lastAudio || '';
+      const file = x.file || audioName || `audio/${String(i + 1).padStart(3, '0')}.mp3`;
+      return {
+        ...x,
+        id: x.id ?? (i + 1),
+        audio: audioName,
+        speaker: x.speaker || lastSpeaker || '',
+        jp: x.jp ?? x.text ?? '',
+        kana: x.kana ?? '',
+        romaji: x.romaji ?? '',
+        zh: x.zh ?? '',
+        start: Number.isFinite(Number(x.start)) ? Number(x.start) : null,
+        end: Number.isFinite(Number(x.end)) ? Number(x.end) : null,
+        file
+      };
+    });
 
-    // 第11句中文語感修正
+    // 第11句以 lesson.json 為準；若舊檔仍是「我想想。」才修成自然語感
     const item11 = DATA.find(x => Number(x.id) === 11);
-    if (item11) item11.zh = '嗯, 是呢…';
+    if (item11 && item11.zh === '我想想。') item11.zh = '嗯…是呢。';
 
     current = Math.max(0, Math.min(current, DATA.length - 1));
     renderCurrent(false);
@@ -176,19 +188,99 @@ function renderList(active=false) {
   if (activeRow) activeRow.scrollIntoView({block:'nearest'});
 }
 function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function audioCandidates(seg) {
+  const raw = seg.file || seg.audio || '';
+  const list = [];
+  if (raw) list.push(raw);
+  if (raw && !raw.includes('/')) list.push('audio/' + raw);
+  if (seg.audio && seg.audio !== raw) list.push(seg.audio);
+  list.push(`audio/${String(current + 1).padStart(3, '0')}.mp3`);
+  return [...new Set(list.filter(Boolean))];
+}
+
 async function playClip(seg) {
-  return new Promise(async (resolve, reject) => {
+  const candidates = audioCandidates(seg);
+  let lastError = null;
+
+  for (const src of candidates) {
+    try {
+      await playClipFromSource(seg, src);
+      return;
+    } catch (e) {
+      lastError = e;
+      console.warn('音檔嘗試失敗：', src, e);
+    }
+  }
+
+  throw lastError || new Error('音檔載入失敗');
+}
+
+function playClipFromSource(seg, src) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const start = Number.isFinite(Number(seg.start)) ? Number(seg.start) : 0;
+    const end = Number.isFinite(Number(seg.end)) ? Number(seg.end) : null;
+    const rate = parseFloat(speedEl.value || '1') || 1;
+
+    function cleanup() {
+      player.removeEventListener('timeupdate', onTimeUpdate);
+      player.removeEventListener('ended', onEnded);
+      player.removeEventListener('error', onError);
+      player.removeEventListener('loadedmetadata', onLoaded);
+      player.removeEventListener('canplay', onCanPlay);
+    }
+    function finish() {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      player.pause();
+      renderCurrent(false);
+      resolve();
+    }
+    function fail(message) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      player.pause();
+      renderCurrent(false);
+      reject(new Error(message || ('音檔載入失敗：' + src)));
+    }
+    function onTimeUpdate() {
+      if (end !== null && player.currentTime >= end) finish();
+    }
+    function onEnded() { finish(); }
+    function onError() { fail('音檔載入失敗：' + src); }
+    async function startPlay() {
+      try {
+        player.playbackRate = rate;
+        if (Math.abs(player.currentTime - start) > 0.08) player.currentTime = start;
+        renderCurrent(true);
+        const p = player.play();
+        if (p && typeof p.then === 'function') await p;
+      } catch (e) {
+        fail(e && e.message ? e.message : ('音檔播放失敗：' + src));
+      }
+    }
+    function onLoaded() {
+      try {
+        player.currentTime = start;
+      } catch (e) {}
+    }
+    function onCanPlay() { startPlay(); }
+
     try {
       player.pause();
-      player.src = seg.file;
-      player.playbackRate = parseFloat(speedEl.value || '1') || 1;
-      player.currentTime = 0;
-      player.onended = () => { renderCurrent(false); resolve(); };
-      player.onerror = () => reject(new Error('音檔載入失敗：' + seg.file));
-      renderCurrent(true);
-      const p = player.play();
-      if (p && typeof p.then === 'function') await p;
-    } catch (e) { reject(e); }
+      cleanup();
+      player.addEventListener('timeupdate', onTimeUpdate);
+      player.addEventListener('ended', onEnded);
+      player.addEventListener('error', onError);
+      player.addEventListener('loadedmetadata', onLoaded);
+      player.addEventListener('canplay', onCanPlay, { once: true });
+      player.src = src;
+      player.load();
+    } catch (e) {
+      fail(e && e.message ? e.message : ('音檔設定失敗：' + src));
+    }
   });
 }
 async function runCurrentSegment(onlyOne=false) {
@@ -254,14 +346,16 @@ document.getElementById('unlockBtn').addEventListener('click', async () => {
   try {
     if (!DATA || DATA.length === 0) { await loadLesson(); }
     if (!DATA || DATA.length === 0) throw new Error('lesson.json 尚未載入完成');
-    player.src = DATA[0].file;
+    const first = DATA[0];
+    const src = audioCandidates(first)[0];
+    player.src = src;
     player.muted = true;
+    try { if (Number.isFinite(Number(first.start))) player.currentTime = Number(first.start); } catch(e) {}
     await player.play();
     player.pause();
-    player.currentTime = 0;
     player.muted = false;
     unlocked = true;
-    setStatus('音訊已解鎖，可以開始播放');
+    setStatus(`音訊已解鎖，可以開始播放（共 ${DATA.length} 句）`);
   } catch(e) { console.error(e); alert('解鎖失敗，請確認 audio 資料夾與 HTML 一起上傳，並用 localhost / GitHub Pages 開啟。'); }
 });
 document.getElementById('startBtn').addEventListener('click', startSequence);
