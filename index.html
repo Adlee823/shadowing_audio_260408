@@ -25,6 +25,9 @@ button.green { background:var(--green); }
 @keyframes yellowPulse { from { box-shadow:0 0 0 rgba(250,204,21,0); background:#020617; } to { box-shadow:0 0 28px rgba(250,204,21,.75); background:#16130a; } }
 .idx { color:var(--accent); font-weight:900; margin-bottom:8px; }
 .jp { font-size:34px; line-height:1.5; margin:8px 0 14px; color:#ff4d4f; font-weight:800; }
+.word { display:inline-block; padding:0 4px; margin:0 1px 4px; border-radius:10px; transition:background-color .08s ease, color .08s ease, transform .08s ease; }
+.word.active-word { background:#facc15; color:#111827; transform:translateY(-1px); box-shadow:0 0 18px rgba(250,204,21,.45); }
+.word.done-word { color:#fca5a5; }
 .meta { display:grid; grid-template-columns:1fr; gap:8px; color:#cbd5e1; }
 .meta div { background:#0b1220; padding:10px 12px; border-radius:12px; font-weight:700; }
 #kana { color:#ff9900; }
@@ -50,7 +53,7 @@ button.green { background:var(--green); }
 </head>
 <body>
 <div class="wrap">
-  <h1>🎧 Shadowing 模式</h1>
+  <h1>🎧 Shadowing 模式｜逐字同步版</h1>
   <div class="panel">
     <div class="controls">
       <label>延遲跟讀（毫秒）<input id="delayMs" type="number" min="0" step="100" value="1500"></label>
@@ -163,7 +166,7 @@ function renderCurrent(active=false) {
   current = Math.max(0, Math.min(current, DATA.length - 1));
   const x = DATA[current];
   idxEl.textContent = `第 ${current+1} 句 / 共 ${DATA.length} 句`;
-  jpEl.textContent = x.jp;
+  jpEl.innerHTML = renderWordHtml(x);
   kanaEl.textContent = x.kana;
   romajiEl.textContent = x.romaji;
   zhEl.textContent = x.zh;
@@ -185,6 +188,36 @@ function renderList(active=false) {
   if (activeRow) activeRow.scrollIntoView({block:'nearest'});
 }
 function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function autoWords(seg) {
+  const text = String(seg.jp || '').replace(/[。、「」、,.!?！？]/g, '');
+  const chars = Array.from(text).filter(Boolean);
+  const start = Number(seg.start) || 0;
+  const end = Number(seg.end);
+  if (!chars.length || !Number.isFinite(end) || end <= start) return [];
+  const unit = (end - start) / chars.length;
+  return chars.map((t, i) => ({ t, s:start + unit * i, e:start + unit * (i + 1) }));
+}
+function getWords(seg) {
+  return Array.isArray(seg.words) && seg.words.length ? seg.words : autoWords(seg);
+}
+function renderWordHtml(seg) {
+  const words = getWords(seg);
+  if (!words.length) return escapeHtml(seg.jp || '');
+  return words.map((w, i) => '<span class="word" data-word-index="' + i + '">' + escapeHtml(w.t) + '</span>').join('');
+}
+function updateWordHighlight(seg) {
+  const words = getWords(seg);
+  const spans = jpEl.querySelectorAll('.word');
+  if (!words.length || !spans.length) return;
+  const now = player.currentTime;
+  spans.forEach((span, i) => {
+    const w = words[i];
+    const active = w && now >= Number(w.s) && now < Number(w.e);
+    const done = w && now >= Number(w.e);
+    span.classList.toggle('active-word', !!active);
+    span.classList.toggle('done-word', !!done && !active);
+  });
+}
 function audioCandidates(seg) {
   const list = [];
   if (seg.audio) list.push(seg.audio);       // 根目錄 m4a：1_maria_san.m4a
@@ -261,6 +294,7 @@ async function playClip(seg) {
       await prepareAudio(src, startTime);
 
       player.ontimeupdate = () => {
+        updateWordHighlight(seg);
         if (player.currentTime >= endTime - 0.02) finish();
       };
       player.onended = finish;
