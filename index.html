@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>日文 Shadowing｜逐字同步 WebAudio 精準版</title>
+<style>
+:root { --bg:#0f172a; --muted:#94a3b8; --text:#e5e7eb; --accent:#38bdf8; --green:#22c55e; --yellow:#facc15; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:Arial,"Noto Sans TC",sans-serif; background:linear-gradient(180deg,#020617,#0f172a); color:var(--text); }
+.wrap { max-width:980px; margin:0 auto; padding:20px; }
+h1 { margin:0 0 14px; font-size:30px; }
+.panel { background:rgba(17,24,39,.92); border:1px solid #334155; border-radius:20px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+.controls { display:grid; grid-template-columns:repeat(4,minmax(120px,1fr)); gap:12px; margin-bottom:16px; }
+.controls label { display:flex; flex-direction:column; gap:6px; color:var(--muted); font-size:14px; }
+input, select { width:100%; padding:10px 12px; border-radius:12px; border:1px solid #475569; background:#0b1220; color:#fff; font-weight:700; }
+.btns { display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 18px; }
+button { border:0; border-radius:999px; padding:12px 18px; cursor:pointer; font-weight:800; color:#001018; background:var(--accent); }
+button.secondary { background:#cbd5e1; }
+button.ghost { background:#1e293b; color:#fff; border:1px solid #475569; }
+button.green { background:var(--green); }
+.status { color:#f8fafc; background:#0b1220; border:1px solid #334155; border-radius:14px; padding:12px 14px; margin-bottom:12px; font-weight:800; }
+.bigcard { background:#020617; border:1px solid #334155; border-radius:20px; padding:18px; margin-bottom:14px; transition:box-shadow .18s ease, background-color .18s ease; }
+.bigcard.glow { animation:yellowPulse .65s infinite alternate; }
+@keyframes yellowPulse { from { box-shadow:0 0 0 rgba(250,204,21,0); background:#020617; } to { box-shadow:0 0 28px rgba(250,204,21,.75); background:#16130a; } }
+.idx { color:var(--accent); font-weight:900; margin-bottom:8px; }
+.jp { font-size:34px; line-height:1.7; margin:8px 0 14px; color:#ff4d4f; font-weight:800; }
+.word { display:inline-block; padding:0 .06em; border-radius:.25em; transition:background .08s,color .08s,opacity .08s; }
+.word.active-word { background:var(--yellow); color:#111827; }
+.word.done-word { opacity:.72; }
+.meta { display:grid; grid-template-columns:1fr; gap:8px; color:#cbd5e1; }
+.meta div { background:#0b1220; padding:10px 12px; border-radius:12px; font-weight:700; }
+#kana { color:#ff9900; }
+#romaji { color:#ffd84d; }
+#zh { color:#22c55e; }
+.list { margin-top:14px; max-height:46vh; overflow:auto; border-top:1px solid #334155; padding-top:10px; }
+.row { display:grid; grid-template-columns:56px 1.2fr 1fr 1fr; gap:14px; align-items:center; padding:10px 12px; border-radius:12px; border:1px solid transparent; cursor:pointer; transition:background-color .15s ease,color .15s ease,border-color .15s ease; }
+.row:hover { background:#0b1220; }
+.row.playing { background:#fff59d !important; border-color:#facc15 !important; color:#111827 !important; }
+.row.active:not(.playing) { background:#083344; border-color:#38bdf8; }
+.row .no { font-weight:900; color:#fff; }
+.row.playing .no, .row.playing .small { color:#111827 !important; }
+.row .jp2 { font-weight:800; }
+.row .small { color:#bfdbfe; font-size:13px; }
+@media (max-width:860px) {
+  .controls { grid-template-columns:1fr 1fr; }
+  .row { grid-template-columns:44px 1fr; }
+  .row > div:nth-child(3), .row > div:nth-child(4) { grid-column:2; }
+  .jp { font-size:27px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎧 Shadowing 模式｜逐字同步精準版</h1>
+  <div class="panel">
+    <div class="controls">
+      <label>延遲跟讀（毫秒）<input id="delayMs" type="number" min="0" step="100" value="1500"></label>
+      <label>播放速度<select id="speed"><option value="0.8">0.8x</option><option value="0.9">0.9x</option><option value="1" selected>1.0x</option><option value="1.1">1.1x</option></select></label>
+      <label>每句重複次數<select id="repeatCount"><option value="1">1 次</option><option value="2" selected>2 次</option><option value="3">3 次</option></select></label>
+      <label>模式<select id="mode"><option value="shadowing" selected>先聽後跟讀</option><option value="repeat">直接重播練習</option></select></label>
+    </div>
+    <div class="btns">
+      <button class="green" id="unlockBtn">🔓 解鎖音訊</button>
+      <button id="startBtn">▶️ 從目前句開始</button>
+      <button class="secondary" id="pauseBtn">⏸ 暫停/繼續</button>
+      <button class="secondary" id="stopBtn">■ 停止</button>
+      <button class="ghost" id="prevBtn">⏮ 上一句</button>
+      <button class="ghost" id="nextBtn">⏭ 下一句</button>
+      <button class="ghost" id="playOneBtn">🔁 單句重播</button>
+    </div>
+    <div class="status" id="status">狀態：尚未開始。請先按「解鎖音訊」。</div>
+    <div class="bigcard" id="bigcard">
+      <div class="idx" id="idx"></div>
+      <div class="jp" id="jp"></div>
+      <div class="meta">
+        <div><strong>平假名：</strong><span id="kana"></span></div>
+        <div><strong>羅馬拼音：</strong><span id="romaji"></span></div>
+        <div><strong>中文：</strong><span id="zh"></span></div>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+
+<script>
+let DATA = [];
+let current = 0;
+let unlocked = false;
+let running = false;
+let paused = false;
+let stopRequested = false;
+let timer = null;
+
+let audioCtx = null;
+const bufferCache = new Map();
+let activeSource = null;
+let activeResolve = null;
+let activeSeg = null;
+let activeStartOffset = 0;
+let activeStartedAt = 0;
+let activeDuration = 0;
+let activeRate = 1;
+let pausedOffset = null;
+let manualStop = false;
+let highlightTimer = null;
+
+const GAP_BETWEEN_SEGMENTS_MS = 180;
+
+const jpEl = document.getElementById('jp');
+const kanaEl = document.getElementById('kana');
+const romajiEl = document.getElementById('romaji');
+const zhEl = document.getElementById('zh');
+const idxEl = document.getElementById('idx');
+const listEl = document.getElementById('list');
+const statusEl = document.getElementById('status');
+const bigcardEl = document.getElementById('bigcard');
+const delayEl = document.getElementById('delayMs');
+const speedEl = document.getElementById('speed');
+const repeatEl = document.getElementById('repeatCount');
+const modeEl = document.getElementById('mode');
+
+function setStatus(msg) { statusEl.textContent = '狀態：' + msg; }
+function clearTimer() { if (timer) { clearTimeout(timer); timer = null; } }
+function wait(ms) { return new Promise(resolve => { clearTimer(); timer = setTimeout(() => { timer = null; resolve(); }, ms); }); }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function escapeHtml(str) { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+async function loadLesson(){
+  try {
+    setStatus('lesson.json 載入中…');
+    const res = await fetch('lesson.json?v=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('lesson.json 載入失敗：HTTP ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('lesson.json 格式錯誤：最外層必須是陣列 []');
+
+    let lastAudio = '';
+    let lastSpeaker = '';
+    DATA = data.map((x, i) => {
+      if (x.audio) lastAudio = x.audio;
+      if (x.speaker) lastSpeaker = x.speaker;
+      return {
+        ...x,
+        id: x.id ?? (i + 1),
+        audio: x.audio || lastAudio || '',
+        speaker: x.speaker || lastSpeaker || '',
+        jp: x.jp ?? x.text ?? '',
+        kana: x.kana ?? '',
+        romaji: x.romaji ?? '',
+        zh: x.zh ?? '',
+        start: Number.isFinite(Number(x.start)) ? Number(x.start) : 0,
+        end: Number.isFinite(Number(x.end)) ? Number(x.end) : 0
+      };
+    });
+
+    const item11 = DATA.find(x => Number(x.id) === 11);
+    if (item11) item11.zh = '我想想看…';
+
+    current = Math.max(0, Math.min(current, DATA.length - 1));
+    renderCurrent(false);
+    setStatus(`lesson.json 已載入，共 ${DATA.length} 句。此版使用 WebAudio 精準切段。`);
+  } catch(e) {
+    console.error(e);
+    DATA = [];
+    renderCurrent(false);
+    setStatus((e && e.message) ? e.message : 'lesson.json 載入失敗');
+  }
+}
+
+function autoWords(seg) {
+  const text = String(seg.jp || '').replace(/[。、「」、,.!?！？]/g, '');
+  const chars = Array.from(text).filter(Boolean);
+  const start = Number(seg.start) || 0;
+  const end = Number(seg.end);
+  if (!chars.length || !Number.isFinite(end) || end <= start) return [];
+  const unit = (end - start) / chars.length;
+  return chars.map((t, i) => ({ t, s:start + unit * i, e:start + unit * (i + 1) }));
+}
+function getWords(seg) {
+  return Array.isArray(seg.words) && seg.words.length ? seg.words : autoWords(seg);
+}
+function renderWordHtml(seg) {
+  const words = getWords(seg);
+  if (!words.length) return escapeHtml(seg.jp || '');
+  return words.map((w, i) => '<span class="word" data-word-index="' + i + '">' + escapeHtml(w.t) + '</span>').join('');
+}
+function updateWordHighlightAt(seg, now) {
+  const words = getWords(seg);
+  const spans = jpEl.querySelectorAll('.word');
+  if (!words.length || !spans.length) return;
+  spans.forEach((span, i) => {
+    const w = words[i];
+    const active = w && now >= Number(w.s) && now < Number(w.e);
+    const done = w && now >= Number(w.e);
+    span.classList.toggle('active-word', !!active);
+    span.classList.toggle('done-word', !!done && !active);
+  });
+}
+function startHighlightLoop(seg) {
+  stopHighlightLoop();
+  highlightTimer = setInterval(() => {
+    if (!audioCtx || !activeSeg) return;
+    const now = activeStartOffset + Math.max(0, (audioCtx.currentTime - activeStartedAt) * activeRate);
+    updateWordHighlightAt(activeSeg, now);
+  }, 30);
+}
+function stopHighlightLoop() {
+  if (highlightTimer) clearInterval(highlightTimer);
+  highlightTimer = null;
+}
+
+function renderCurrent(active=false) {
+  if (!DATA || DATA.length === 0) {
+    idxEl.textContent = '第 0 句 / 共 0 句';
+    jpEl.textContent = '資料載入中…';
+    kanaEl.textContent = '';
+    romajiEl.textContent = '';
+    zhEl.textContent = '';
+    bigcardEl.classList.remove('glow');
+    listEl.innerHTML = '';
+    return;
+  }
+  current = Math.max(0, Math.min(current, DATA.length - 1));
+  const x = DATA[current];
+  idxEl.textContent = `第 ${current+1} 句 / 共 ${DATA.length} 句`;
+  jpEl.innerHTML = renderWordHtml(x);
+  kanaEl.textContent = x.kana;
+  romajiEl.textContent = x.romaji;
+  zhEl.textContent = x.zh;
+  bigcardEl.classList.toggle('glow', active);
+  renderList(active);
+}
+function renderList(active=false) {
+  if (!DATA || DATA.length === 0) { listEl.innerHTML = ''; return; }
+  listEl.innerHTML = DATA.map((x,i)=>`
+    <div class="row ${i===current?'active':''} ${i===current && active ? 'playing' : ''}" data-i="${i}">
+      <div class="no">${String(i+1).padStart(2,'0')}</div>
+      <div class="jp2">${escapeHtml(x.jp)}</div>
+      <div class="small">${escapeHtml(x.kana)}</div>
+      <div class="small">${escapeHtml(x.zh)}</div>
+    </div>
+  `).join('');
+  [...listEl.querySelectorAll('.row')].forEach(row => row.addEventListener('click', () => onRowClick(Number(row.dataset.i))));
+  const activeRow = listEl.querySelector(active ? '.row.playing' : '.row.active');
+  if (activeRow) activeRow.scrollIntoView({block:'nearest'});
+}
+
+async function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state !== 'running') await audioCtx.resume();
+}
+
+async function getBuffer(src) {
+  if (!src) throw new Error(`第 ${current + 1} 句沒有 audio 音檔設定`);
+  if (bufferCache.has(src)) return bufferCache.get(src);
+  const res = await fetch(src + '?v=' + Date.now(), { cache: 'no-store' });
+  if (!res.ok) throw new Error('音檔載入失敗：' + src + ' HTTP ' + res.status);
+  const arr = await res.arrayBuffer();
+  const buf = await audioCtx.decodeAudioData(arr);
+  bufferCache.set(src, buf);
+  return buf;
+}
+
+function stopActiveSource(resolveIt=false) {
+  manualStop = true;
+  if (activeSource) {
+    try { activeSource.stop(); } catch(e) {}
+    try { activeSource.disconnect(); } catch(e) {}
+  }
+  activeSource = null;
+  stopHighlightLoop();
+  bigcardEl.classList.remove('glow');
+  if (resolveIt && activeResolve) {
+    const r = activeResolve;
+    activeResolve = null;
+    r();
+  }
+}
+
+async function playClip(seg, resumeOffset=null) {
+  await ensureAudioContext();
+  const src = seg.audio;
+  const start = Number(seg.start);
+  const end = Number(seg.end);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+    throw new Error(`第 ${current + 1} 句 start/end 秒數錯誤`);
+  }
+
+  const buffer = await getBuffer(src);
+  const rate = parseFloat(speedEl.value || '1') || 1;
+  const offset = Number.isFinite(Number(resumeOffset)) ? Number(resumeOffset) : start;
+  const duration = Math.max(0.03, end - offset);
+
+  return new Promise((resolve, reject) => {
+    try {
+      stopActiveSource(false);
+      manualStop = false;
+
+      activeSeg = seg;
+      activeResolve = resolve;
+      activeStartOffset = offset;
+      activeStartedAt = audioCtx.currentTime;
+      activeDuration = duration;
+      activeRate = rate;
+      pausedOffset = null;
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = rate;
+      source.connect(audioCtx.destination);
+      activeSource = source;
+
+      renderCurrent(true);
+      updateWordHighlightAt(seg, offset);
+      startHighlightLoop(seg);
+
+      source.onended = () => {
+        if (manualStop || paused) return;
+        stopHighlightLoop();
+        activeSource = null;
+        activeResolve = null;
+        renderCurrent(false);
+        resolve();
+      };
+
+      // WebAudio 精準從 offset 開始，只播 duration 秒；不再使用 HTMLAudio currentTime seek。
+      source.start(0, offset, duration);
+    } catch(e) {
+      reject(e);
+    }
+  });
+}
+
+async function runCurrentSegment(onlyOne=false) {
+  if (!DATA || DATA.length === 0) { setStatus('lesson.json 尚未載入完成'); return; }
+  const seg = DATA[current];
+  const repeatCount = onlyOne ? 1 : Math.max(1, parseInt(repeatEl.value,10) || 1);
+  const delay = Math.max(0, parseInt(delayEl.value,10) || 0);
+  const mode = modeEl.value;
+
+  for (let i=0; i<repeatCount; i++) {
+    if (stopRequested) return;
+    if (mode === 'shadowing' && i === 0 && repeatCount > 1 && !onlyOne) {
+      setStatus(`第 ${current+1} 句：先聽`);
+      await playClip(seg);
+      await sleep(GAP_BETWEEN_SEGMENTS_MS);
+      if (stopRequested) return;
+      setStatus(`第 ${current+1} 句：延遲 ${delay} ms，準備跟讀`);
+      renderCurrent(true);
+      await wait(delay);
+      renderCurrent(false);
+      if (stopRequested) return;
+    } else {
+      const idx = mode === 'shadowing' && repeatCount > 1 && !onlyOne ? i : i+1;
+      const total = mode === 'shadowing' && repeatCount > 1 && !onlyOne ? repeatCount-1 : repeatCount;
+      setStatus(`第 ${current+1} 句：第 ${idx} / ${total} 次播放`);
+      await playClip(seg);
+      await sleep(GAP_BETWEEN_SEGMENTS_MS);
+      if (stopRequested) return;
+      if (i < repeatCount-1) await wait(250);
+    }
+  }
+  setStatus(`第 ${current+1} 句完成`);
+}
+
+async function startSequence() {
+  if (!DATA || DATA.length === 0) { alert('lesson.json 尚未載入完成'); return; }
+  if (!unlocked) { alert('請先按「解鎖音訊」'); return; }
+  if (running) return;
+  running = true; paused = false; stopRequested = false;
+  try {
+    while (current < DATA.length && !stopRequested) {
+      renderCurrent(false);
+      await runCurrentSegment(false);
+      if (stopRequested) break;
+      current++;
+    }
+    if (current >= DATA.length) { current = 0; setStatus('全部播放完成，已回到第一句'); }
+  } catch(e) { console.error(e); setStatus(e.message || '播放失敗'); }
+  finally { running = false; paused = false; stopRequested = false; stopActiveSource(false); renderCurrent(false); }
+}
+
+async function pauseToggle() {
+  if (!running && !activeSource) return;
+  if (!paused && activeSource && activeSeg) {
+    const elapsed = Math.max(0, (audioCtx.currentTime - activeStartedAt) * activeRate);
+    pausedOffset = activeStartOffset + elapsed;
+    paused = true;
+    manualStop = true;
+    try { activeSource.stop(); } catch(e) {}
+    activeSource = null;
+    stopHighlightLoop();
+    setStatus('已暫停');
+    bigcardEl.classList.remove('glow');
+    renderList(false);
+  } else if (paused && activeSeg) {
+    paused = false;
+    setStatus(`第 ${current+1} 句：繼續播放`);
+    const seg = activeSeg;
+    const offset = pausedOffset;
+    // 原本等待 playClip 的 Promise 不會在這裡重建流程，因此暫停功能作為單句續播使用。
+    playClip(seg, offset).catch(e => setStatus(e.message || '續播失敗'));
+  }
+}
+
+function stopAll() {
+  stopRequested = true; running = false; paused = false; clearTimer();
+  stopActiveSource(true);
+  activeSeg = null;
+  pausedOffset = null;
+  renderCurrent(false);
+  setStatus('已停止');
+}
+
+function jumpTo(i) {
+  current = Math.max(0, Math.min(DATA.length-1, i));
+  stopAll();
+  current = Math.max(0, Math.min(DATA.length-1, i));
+  renderCurrent(false);
+  setStatus(`已切到第 ${current+1} 句`);
+}
+async function onRowClick(i) {
+  if (i === current && running) { pauseToggle(); return; }
+  current = i;
+  if (running) {
+    stopRequested = true;
+    stopActiveSource(true);
+    clearTimer();
+    running = false;
+    await sleep(80);
+    stopRequested = false;
+    startSequence();
+  } else {
+    renderCurrent(false);
+    setStatus(`已切到第 ${current+1} 句`);
+  }
+}
+
+document.getElementById('unlockBtn').addEventListener('click', async () => {
+  try {
+    if (!DATA || DATA.length === 0) await loadLesson();
+    if (!DATA || DATA.length === 0) throw new Error('lesson.json 尚未載入完成');
+    await ensureAudioContext();
+    await getBuffer(DATA[0].audio);
+    unlocked = true;
+    setStatus(`音訊已解鎖，可以開始播放（共 ${DATA.length} 句）`);
+  } catch(e) {
+    console.error(e);
+    alert('解鎖失敗：' + (e.message || '請確認 m4a 與 lesson.json 都在 index.html 同一層'));
+  }
+});
+document.getElementById('startBtn').addEventListener('click', startSequence);
+document.getElementById('pauseBtn').addEventListener('click', pauseToggle);
+document.getElementById('stopBtn').addEventListener('click', stopAll);
+document.getElementById('prevBtn').addEventListener('click', () => jumpTo(current-1));
+document.getElementById('nextBtn').addEventListener('click', () => jumpTo(current+1));
+document.getElementById('playOneBtn').addEventListener('click', async () => {
+  if (!unlocked) { alert('請先按「解鎖音訊」'); return; }
+  stopAll();
+  stopRequested=false;
+  await sleep(80);
+  await runCurrentSegment(true);
+});
+
+loadLesson();
+</script>
+</body>
+</html>
