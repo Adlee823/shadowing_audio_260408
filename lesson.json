@@ -1,0 +1,386 @@
+[
+  {
+    "id": 1,
+    "jp": "一。",
+    "kana": "いち。",
+    "romaji": "ichi.",
+    "zh": "一。",
+    "file": "audio/001.mp3"
+  },
+  {
+    "id": 2,
+    "jp": "マリアさん、",
+    "kana": "まりあさん、",
+    "romaji": "maria-san,",
+    "zh": "Maria，",
+    "file": "audio/002.mp3"
+  },
+  {
+    "id": 3,
+    "jp": "東京はどうでしたか。",
+    "kana": "とうきょうはどうでしたか。",
+    "romaji": "toukyou wa dou deshita ka.",
+    "zh": "東京怎麼樣？",
+    "file": "audio/003.mp3"
+  },
+  {
+    "id": 4,
+    "jp": "よかったですよ。",
+    "kana": "よかったですよ。",
+    "romaji": "yokatta desu yo.",
+    "zh": "很好喔。",
+    "file": "audio/004.mp3"
+  },
+  {
+    "id": 5,
+    "jp": "何をしましたか。",
+    "kana": "なにをしましたか。",
+    "romaji": "nani o shimashita ka.",
+    "zh": "做了什麼？",
+    "file": "audio/005.mp3"
+  },
+  {
+    "id": 6,
+    "jp": "うえのに行きました。",
+    "kana": "うえのにいきました。",
+    "romaji": "ueno ni ikimashita.",
+    "zh": "去了上野。",
+    "file": "audio/006.mp3"
+  },
+  {
+    "id": 7,
+    "jp": "それから、",
+    "kana": "それから、",
+    "romaji": "sorekara,",
+    "zh": "然後，",
+    "file": "audio/007.mp3"
+  },
+  {
+    "id": 8,
+    "jp": "おみやげも買いました。",
+    "kana": "おみやげもかいました。",
+    "romaji": "omiyage mo kaimashita.",
+    "zh": "也買了伴手禮。",
+    "file": "audio/008.mp3"
+  },
+  {
+    "id": 9,
+    "jp": "そうですか。",
+    "kana": "そうですか。",
+    "romaji": "sou desu ka.",
+    "zh": "這樣啊。",
+    "file": "audio/009.mp3"
+  },
+  {
+    "id": 10,
+    "jp": "次はどこに行きたいですか。",
+    "kana": "つぎはどこにいきたいですか。",
+    "romaji": "tsugi wa doko ni ikitai desu ka.",
+    "zh": "下次想去哪裡？",
+    "file": "audio/010.mp3"
+  },
+  {
+    "id": 11,
+    "jp": "そうですね。",
+    "kana": "そうですね。",
+    "romaji": "sou desu ne.",
+    "zh": "我想想看…",
+    "file": "audio/011.mp3"
+  },
+  {
+    "id": 12,
+    "jp": "広島に行きたいです。",
+    "kana": "ひろしまにいきたいです。",
+    "romaji": "hiroshima ni ikitai desu.",
+    "zh": "想去廣島。",
+    "file": "audio/012.mp3"
+  },
+  {
+    "id": 13,
+    "jp": "二。",
+    "kana": "に。",
+    "romaji": "ni.",
+    "zh": "二。",
+    "file": "audio/013.mp3"
+  },
+  {
+    "id": 14,
+    "jp": "パクさんは",
+    "kana": "ぱくさんは",
+    "romaji": "paku-san wa",
+    "zh": "朴先生呢，",
+    "file": "audio/014.mp3"
+  },
+  {
+    "id": 15,
+    "jp": "東京で何をしましたか。",
+    "kana": "とうきょうでなにをしましたか。",
+    "romaji": "toukyou de nani o shimashita ka.",
+    "zh": "在東京做了什麼？",
+    "file": "audio/015.mp3"
+  },
+  {
+    "id": 16,
+    "jp": "東京タワーを見ました。",
+    "kana": "とうきょうタワーをみました。",
+    "romaji": "toukyou tawaa o mimashita.",
+    "zh": "看了東京鐵塔。",
+    "file": "audio/016.mp3"
+  },
+  {
+    "id": 17,
+    "jp": "うーん、",
+    "kana": "うーん、",
+    "romaji": "uun,",
+    "zh": "嗯，",
+    "file": "audio/017.mp3"
+  },
+  {
+    "id": 18,
+    "jp": "おすし食べましたか。",
+    "kana": "おすしたべましたか。",
+    "romaji": "osushi tabemashita ka.",
+    "zh": "有吃壽司嗎？",
+    "file": "audio/018.mp3"
+  },
+  {
+    "id": 19,
+    "jp": "はい、",
+    "kana": "はい、",
+    "romaji": "hai,",
+    "zh": "有，",
+    "file": "audio/019.mp3"
+  },
+  {
+    "id": 20,
+    "jp": "食べました。",
+    "kana": "たべました。",
+    "romaji": "tabemashita.",
+    "zh": "吃了。",
+    "file": "audio/020.mp3"
+  },
+  {
+    "id": 21,
+    "jp": "おいしかったです。",
+    "kana": "おいしかったです。",
+    "romaji": "oishikatta desu.",
+    "zh": "很好吃。",
+    "file": "audio/021.mp3"
+  },
+  {
+    "id": 22,
+    "jp": "次はどこに行きたいですか。",
+    "kana": "つぎはどこにいきたいですか。",
+    "romaji": "tsugi wa doko ni ikitai desu ka.",
+    "zh": "下次想去哪裡？",
+    "file": "audio/022.mp3"
+  },
+  {
+    "id": 23,
+    "jp": "次は北海道に行きたいです。",
+    "kana": "つぎはほっかいどうにいきたいです。",
+    "romaji": "tsugi wa hokkaidou ni ikitai desu.",
+    "zh": "下次想去北海道。",
+    "file": "audio/023.mp3"
+  },
+  {
+    "id": 24,
+    "jp": "雪がきれいですから。",
+    "kana": "ゆきがきれいですから。",
+    "romaji": "yuki ga kirei desu kara.",
+    "zh": "因為雪很漂亮。",
+    "file": "audio/024.mp3"
+  },
+  {
+    "id": 25,
+    "jp": "三。",
+    "kana": "さん。",
+    "romaji": "san.",
+    "zh": "三。",
+    "file": "audio/025.mp3"
+  },
+  {
+    "id": 26,
+    "jp": "ロザナさん、",
+    "kana": "ろざなさん、",
+    "romaji": "rozana-san,",
+    "zh": "Rozana，",
+    "file": "audio/026.mp3"
+  },
+  {
+    "id": 27,
+    "jp": "どこに行きましたか。",
+    "kana": "どこにいきましたか。",
+    "romaji": "doko ni ikimashita ka.",
+    "zh": "去了哪裡？",
+    "file": "audio/027.mp3"
+  },
+  {
+    "id": 28,
+    "jp": "私も",
+    "kana": "わたしも",
+    "romaji": "watashi mo",
+    "zh": "我也",
+    "file": "audio/028.mp3"
+  },
+  {
+    "id": 29,
+    "jp": "うえのに行きました。",
+    "kana": "うえのにいきました。",
+    "romaji": "ueno ni ikimashita.",
+    "zh": "去了上野。",
+    "file": "audio/029.mp3"
+  },
+  {
+    "id": 30,
+    "jp": "それから、",
+    "kana": "それから、",
+    "romaji": "sorekara,",
+    "zh": "然後，",
+    "file": "audio/030.mp3"
+  },
+  {
+    "id": 31,
+    "jp": "すしも食べましたよ。",
+    "kana": "すしもたべましたよ。",
+    "romaji": "sushi mo tabemashita yo.",
+    "zh": "也吃了壽司喔。",
+    "file": "audio/031.mp3"
+  },
+  {
+    "id": 32,
+    "jp": "楽しかったです。",
+    "kana": "たのしかったです。",
+    "romaji": "tanoshikatta desu.",
+    "zh": "很開心。",
+    "file": "audio/032.mp3"
+  },
+  {
+    "id": 33,
+    "jp": "また日本に行きたいですか。",
+    "kana": "またにほんにいきたいですか。",
+    "romaji": "mata nihon ni ikitai desu ka.",
+    "zh": "還想再去日本嗎？",
+    "file": "audio/033.mp3"
+  },
+  {
+    "id": 34,
+    "jp": "はい。",
+    "kana": "はい。",
+    "romaji": "hai.",
+    "zh": "想。",
+    "file": "audio/034.mp3"
+  },
+  {
+    "id": 35,
+    "jp": "次は沖縄に行きたいです。",
+    "kana": "つぎはおきなわにいきたいです。",
+    "romaji": "tsugi wa okinawa ni ikitai desu.",
+    "zh": "下次想去沖繩。",
+    "file": "audio/035.mp3"
+  },
+  {
+    "id": 36,
+    "jp": "ビーチがきれいですから。",
+    "kana": "びーちがきれいですから。",
+    "romaji": "biichi ga kirei desu kara.",
+    "zh": "因為海灘很漂亮。",
+    "file": "audio/036.mp3"
+  },
+  {
+    "id": 37,
+    "jp": "四。",
+    "kana": "よん。",
+    "romaji": "yon.",
+    "zh": "四。",
+    "file": "audio/037.mp3"
+  },
+  {
+    "id": 38,
+    "jp": "カールさん、",
+    "kana": "かーるさん、",
+    "romaji": "kaaru-san,",
+    "zh": "Karl，",
+    "file": "audio/038.mp3"
+  },
+  {
+    "id": 39,
+    "jp": "東京タワー",
+    "kana": "とうきょうタワー",
+    "romaji": "toukyou tawaa",
+    "zh": "東京鐵塔",
+    "file": "audio/039.mp3"
+  },
+  {
+    "id": 40,
+    "jp": "見ましたか。",
+    "kana": "みましたか。",
+    "romaji": "mimashita ka.",
+    "zh": "看了嗎？",
+    "file": "audio/040.mp3"
+  },
+  {
+    "id": 41,
+    "jp": "もちろん見ましたよ。",
+    "kana": "もちろんみましたよ。",
+    "romaji": "mochiron mimashita yo.",
+    "zh": "當然看了。",
+    "file": "audio/041.mp3"
+  },
+  {
+    "id": 42,
+    "jp": "おみやげも買いました。",
+    "kana": "おみやげもかいました。",
+    "romaji": "omiyage mo kaimashita.",
+    "zh": "也買了伴手禮。",
+    "file": "audio/042.mp3"
+  },
+  {
+    "id": 43,
+    "jp": "それはよかったですね。",
+    "kana": "それはよかったですね。",
+    "romaji": "sore wa yokatta desu ne.",
+    "zh": "那真是不錯呢。",
+    "file": "audio/043.mp3"
+  },
+  {
+    "id": 44,
+    "jp": "はい。",
+    "kana": "はい。",
+    "romaji": "hai.",
+    "zh": "是。",
+    "file": "audio/044.mp3"
+  },
+  {
+    "id": 45,
+    "jp": "でも",
+    "kana": "でも",
+    "romaji": "demo",
+    "zh": "但是。",
+    "file": "audio/045.mp3"
+  },
+  {
+    "id": 46,
+    "jp": "京都に行きませんでした。",
+    "kana": "きょうとにいきませんでした。",
+    "romaji": "kyouto ni ikimasen deshita.",
+    "zh": "沒有去京都。",
+    "file": "audio/046.mp3"
+  },
+  {
+    "id": 47,
+    "jp": "次は",
+    "kana": "つぎは",
+    "romaji": "tsugi wa",
+    "zh": "下次",
+    "file": "audio/047.mp3"
+  },
+  {
+    "id": 48,
+    "jp": "京都に行きたいです。",
+    "kana": "きょうとにいきたいです。",
+    "romaji": "kyouto ni ikitai desu.",
+    "zh": "想去京都。",
+    "file": "audio/048.mp3"
+  }
+]
